@@ -17,8 +17,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 RUN composer install --no-dev --optimize-autoloader
 
-RUN cp /var/www/html/.env.example /var/www/html/.env \
-    && php artisan key:generate \
+RUN php artisan key:generate \
     && php artisan migrate \
     && chown -R www-data:www-data /var/www/html
 
