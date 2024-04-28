@@ -27,7 +27,7 @@ php artisan key:generate
 After migrate database
 
 ```
-php artisan migrate --seed
+php artisan migrate
 ```
 
 Finally run and visit `http://127.0.0.1:8000/`
@@ -42,7 +42,14 @@ Or you can use the docker command
 docker-compose up -d --build
 ```
 
-Then go directly to the url:
+And then setup the application remember to config the .env file
+
+```
+docker compose exec php bash
+composer install
+php artisan key:generate
+php artisan migrate
+```
 
 ### Thanks for reading :heart:
 ### Have a nice day :heart:

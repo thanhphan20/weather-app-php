@@ -1,23 +1,36 @@
 services:
-  laravel-docker:
-    container_name: laravel-docker
-    build: .
-    volumes:
-      - ./laravel-app:/var/www/html
-    ports:
-      - 9000:80
-  
-  mysql_db:
-    image: mysql:latest
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: weather
-    ports:
-    - 3306:3306
-  
-  phpmyadmin:
-    image: phpmyadmin:latest
-    ports:
-      - 9001:80
-    environment:
-      - PMA_ARBITRARY=1
+    php:
+        build: .docker/php
+        ports:
+            - 5173:5173
+        volumes:
+            - .:/var/www:cached
+    nginx:
+        image: nginx
+        ports:
+            - 80:80
+        volumes:
+            - .:/var/www
+            - .docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+            - .docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+        depends_on:
+            - php
+    db:
+        image: mysql
+        ports:
+            - 3306:3306
+        environment:
+            MYSQL_ROOT_PASSWORD: password
+            MYSQL_DATABASE: weather
+            MYSQL_USER: admin
+            MYSQL_PASSWORD: password
+    phpmyadmin:
+        image: phpmyadmin
+        ports:
+            - 8080:80
+        links:
+            - db
+        environment:
+            PMA_HOST: db
+            PMA_PORT: 3306
+            PMA_ARBITRARY: 1
