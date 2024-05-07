@@ -1,9 +1,15 @@
-## Clone My Repo <br>
+## Weather Application <br>
 
-After Cloning, Go to the directory by typing the command shown below.
+First you need to clone my repository
 
 ```
-cd weather-app-php && cd laravel-app
+git clone https://github.com/thanhphan20/weather-app-php.git
+```
+
+After that go to the directory by typing the command shown below.
+
+```
+cd weather-app-php
 ```
 
 Then create `.env` file on root directory
@@ -38,18 +44,17 @@ php artisan serve
 
 Or you can use the docker command
 
+But first you need to setup the application remember to config the .env file
+
+The DB_HOST you must use the DB_HOST=host.docker.internal to run app on docker server
+
 ```
 docker-compose up -d --build
 ```
 
-And then setup the application remember to config the .env file
+The bash command will run to install the package and migrate the database
 
-```
-docker compose exec php bash
-composer install
-php artisan key:generate
-php artisan migrate
-```
+So it will take a moment to complete
 
 ### Thanks for reading :heart:
 ### Have a nice day :heart:

@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Foundation\Configuration\Exceptions;
-use Illuminate\Support\Facades\Redis;
+use App\Exceptions\ApiException;
+use Illuminate\Support\Facades\Validator;
 
 class ApiController extends Controller
 {
@@ -14,45 +14,62 @@ class ApiController extends Controller
         return "hello world";
     }
 
+    public function boot()
+    {
+        parent::boot();
+
+        Validator::extend('special_characters', function ($attribute, $value, $parameters, $validator) {
+            return preg_match('/^[^@#$%&()0-9]+$/', $value);
+        });
+    }
+
     public function forecast(Request $request)
     {
-        $city = $request->input('city');
 
-        if (empty($city)) {
+        $validator = Validator::make($request->all(), [
+            'city' => ['required', 'string', 'regex:/^[^@#$%&()0-9]+$/'],
+        ]);
+
+        if ($validator->fails()) {
+            session()->flash('error', 'Please enter a valid city. The city field must not contain special characters or numbers and not empty.');
             return view('dashboard', ['weatherData' => null]);
         }
 
-        $response = Http::get('http://api.weatherapi.com/v1/forecast.json?', [
-            'key' => config('services.weather_api.key'),
-            'q' => $city,
-            'days' => 14,
-        ]);
+        $city = $request->input('city');
 
-        if ($response->successful()) {
-            $weatherData = $response->json();
+        try {
+            $response = Http::get('http://api.weatherapi.com/v1/forecast.json?', [
+                'key' => config('services.weather_api.key'),
+                'q' => $city,
+                'days' => 14,
+            ]);
 
-            // $request->session()->put('historyData:' . $city, $weatherData);
-            // $this->saveWeatherHistory($request, $weatherData);
-            // $history = $this->getWeatherHistory($request);
+            if ($response->successful()) {
+                $weatherData = $response->json();
 
-            $sessionKey = 'historyData:' . $city;
-            $existingData = $request->session()->get($sessionKey);
+                $sessionKey = 'historyData:' . $city;
+                $existingData = $request->session()->get($sessionKey);
 
-            if (
-                !$existingData ||
-                $existingData['location']['name'] !== $weatherData['location']['name'] ||
-                $existingData['location']['localtime'] !== $weatherData['location']['localtime']
-            ) {
-                $request->session()->put($sessionKey, $weatherData);
+                if (
+                    !$existingData ||
+                    $existingData['location']['name'] !== $weatherData['location']['name'] ||
+                    $existingData['location']['localtime'] !== $weatherData['location']['localtime']
+                ) {
+                    $request->session()->put($sessionKey, $weatherData);
 
-                $this->saveWeatherHistory($request, $weatherData);
+                    $this->saveWeatherHistory($request, $weatherData);
+                }
+
+                $history = $this->getWeatherHistory($request);
+
+                return view('dashboard', ['weatherData' => $weatherData,  'history' => $history]);
+            } else {
+                session()->flash('error', ApiException::httpError('An error occurred while fetching the forecast')->getMessage());
+                return view('dashboard');
             }
-
-            $history = $this->getWeatherHistory($request);
-
-            return view('dashboard', ['weatherData' => $weatherData,  'history' => $history]);
-        } else {
-            return view('dashboard', ['error' => 'An error occurred while fetching forecast']);
+        } catch (ApiException $e) {
+            session()->flash('error', $e::httpError()->getMessage());
+            return view('dashboard');
         }
     }
 
@@ -72,42 +89,69 @@ class ApiController extends Controller
     public function detailPast(Request $request)
     {
 
-        $city = $request->input('city');
-        $date = $request->input('date');
-
-        $response = Http::get('https://api.weatherapi.com/v1/history.json?', [
-            'key' => config('services.weather_api.key'),
-            'q' => $city,
-            'dt' => $date,
+        $validator = Validator::make($request->all(), [
+            'city' => ['required', 'string', 'regex:/^[^@#$%&()0-9]+$/'],
         ]);
 
-        if ($response->successful()) {
-            $weatherData = $response->json();
+        if ($validator->fails()) {
+            session()->flash('error', 'Please enter a valid city. The city field must not contain special characters or numbers and not empty.');
+            return view('dashboard', ['weatherData' => null]);
+        }
 
-            return view('detail', ['weatherData' => $weatherData]);
-        } else {
-            return view('dashboard', ['error-past' => 'An error occurred while fetching history']);
+        $city = $request->input('city');
+        $date = $request->input('date');
+        try {
+            $response = Http::get('https://api.weatherapi.com/v1/history.json?', [
+                'key' => config('services.weather_api.key'),
+                'q' => $city,
+                'dt' => $date,
+            ]);
+
+            if ($response->successful()) {
+                $weatherData = $response->json();
+
+                return view('detail', ['weatherData' => $weatherData]);
+            } else {
+                session()->flash('error', ApiException::httpError('An error occurred while fetching history')->getMessage());
+                return view('dashboard');
+            }
+        } catch (ApiException $e) {
+            session()->flash('error', $e::httpError()->getMessage());
+            return view('dashboard');
         }
     }
 
     public function detailFuture(Request $request)
     {
 
-        $city = $request->input('city');
-        $date = $request->input('date');
-
-        $response = Http::get('https://api.weatherapi.com/v1/future.json?', [
-            'key' => config('services.weather_api.key'),
-            'q' => $city,
-            'dt' => $date,
+        $validator = Validator::make($request->all(), [
+            'city' => ['required', 'string', 'regex:/^[^@#$%&()0-9]+$/'],
         ]);
 
-        if ($response->successful()) {
-            $weatherData = $response->json();
+        if ($validator->fails()) {
+            session()->flash('error', 'Please enter a valid city. The city field must not contain special characters or numbers and not empty.');
+            return view('dashboard', ['weatherData' => null]);
+        }
+        
+        $city = $request->input('city');
+        $date = $request->input('date');
+        try {
+            $response = Http::get('https://api.weatherapi.com/v1/future.json?', [
+                'key' => config('services.weather_api.key'),
+                'q' => $city,
+                'dt' => $date,
+            ]);
 
-            return view('detail', ['weatherData' => $weatherData]);
-        } else {
-            return view('dashboard', ['error-past' => 'An error occurred while fetching history']);
+            if ($response->successful()) {
+                $weatherData = $response->json();
+
+                return view('detail', ['weatherData' => $weatherData]);
+            } else {
+                return view('dashboard', ['error-future' => 'An error occurred while fetching future for']);
+            }
+        } catch (ApiException $e) {
+            session()->flash('error', $e::httpError()->getMessage());
+            return view('dashboard');
         }
     }
 

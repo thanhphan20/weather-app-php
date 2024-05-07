@@ -3,13 +3,13 @@
 @section('content')
 
     <h1>Weather Dashboard</h1>
-    @if (session('sub'))
+    @if (session('subscribed'))
         <div class="alert container alert-success">
-            {{ session('sub') }}
+            {{ session('subscribed') }}
         </div>
-    @elseif (session('unsub'))
+    @elseif (session('unsubscribed'))
         <div class="alert container alert-success">
-            {{ session('unsub') }}
+            {{ session('unsubscribed') }}
         </div>
     @elseif (session('confirmed'))
         <div class="alert container alert-success">
@@ -18,6 +18,10 @@
     @elseif (session('already'))
         <div class="alert container alert-success">
             {{ session('already') }}
+        </div>
+    @elseif (session('error'))
+        <div class="alert container alert-danger">
+            {{ session('error') }}
         </div>
     @elseif (session('error-sub'))
         <div class="alert container alert-danger">
@@ -35,6 +39,22 @@
         <div class="alert container alert-danger">
             {{ session('error-unsubscribed') }}
         </div>
+    @elseif (session('error-past'))
+        <div class="alert container alert-danger">
+            {{ session('error-past') }}
+        </div>
+    @elseif (session('error-future'))
+        <div class="alert container alert-danger">
+            {{ session('error-future') }}
+        </div>
+    @elseif(session('subagain'))
+        <div class="alert container alert-danger">
+            {{ session('subagain') }}
+        </div>
+    @elseif(session('unsubagain'))
+        <div class="alert container alert-danger">
+            {{ session('unsubagain') }}
+        </div>
     @endif
     <div class="container">
         <div class="weather-input">
@@ -43,8 +63,6 @@
                 <input class="city-input" type="text" name="city" placeholder="E.g., New York, London, Tokyo">
                 <button type="submit" class="search-btn">Search</button>
             </form>
-            <div class="separator"></div>
-            <button class="location-btn">Use Current Location</button>
             <div class="margin"></div>
             <h3>Subscribe to receive daily weather forecast</h3>
             <input class="email-input" id="email" type="email" placeholder="E.g., youremailhere@gmail.com" />
@@ -117,8 +135,8 @@
                     </div>
                 @endif
                 <div class="past-future">
-                    <label for="date-input">Select the day to get weather forecast data</label>
-                    
+                    <h3>Select the day to get weather forecast data</h3>
+
                     <input type="text" class="form-control" id="date-input" name="date" placeholder="Select Day">
                     <div class="margin"></div>
                     <button id="past-btn" class="btn btn-primary load-btn">Get past weather data</button>

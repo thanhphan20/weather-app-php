@@ -15,7 +15,7 @@ class CreateSubscriptionsTable extends Migration
     {
         Schema::create('subscriptions', function (Blueprint $table) {
             $table->id();
-            $table->string('email')->unique();
+            $table->string('user_id')->unique();
             $table->string('status')->default('pending');
             $table->timestamp('email_verified_at')->nullable();
             $table->timestamps();

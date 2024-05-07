@@ -5,6 +5,7 @@ services:
             - 5173:5173
         volumes:
             - .:/var/www:cached
+        command: bash -c "/var/www/run.sh"
     nginx:
         image: nginx
         ports:
